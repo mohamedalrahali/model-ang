@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Jungle in English — ML Admin</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+  </head>
+  <body>
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-logo">W</div>
+          <div class="brand-text">
+            <h1>Jungle in English</h1>
+            <span>Admin Panel · ML Lab</span>
+          </div>
+        </div>
+        <nav class="nav">
+          <a href="#" data-section="dash" class="active"
+            ><span class="nav-icon">⌂</span> Dashboard</a
+          >
+          <a href="#" data-section="perf"
+            ><span class="nav-icon">📈</span> Final performance (regression)</a
+          >
+          <a href="#" data-section="eng"
+            ><span class="nav-icon">📚</span> Engagement & completion</a
+          >
+          <a href="#" data-section="reco"
+            ><span class="nav-icon">⭐</span> Category recommendations</a
+          >
+          <a href="#" data-section="gmm"
+            ><span class="nav-icon">◎</span> GMM segmentation (Optuna)</a
+          >
+        </nav>
+        <div class="sidebar-user">
+          <div class="avatar">A</div>
+          <div>
+            <div class="name">Admin User</div>
+            <div class="email">admin@jungle-in-english.com</div>
+          </div>
+        </div>
+      </aside>
+      <div class="main">
+        <header class="topbar">
+          <div class="search-wrap">
+            <input type="search" placeholder="Search..." readonly />
+          </div>
+          <div class="topbar-actions">
+            <button type="button" class="icon-btn dot" title="Notifications">🔔</button>
+            <button type="button" class="icon-btn" title="Theme">🌙</button>
+            <button type="button" class="btn-signin">Sign In</button>
+          </div>
+        </header>
+        <main class="content">
+          <section id="dash" class="section-hidden is-active">
+            <h2 class="page-title">Dashboard</h2>
+            <p class="page-sub">
+              Status of the three pipelines from your notebooks: final performance regression, online-course
+              completion (LightGBM), and Gaussian-mixture segmentation (GMM).
+            </p>
+            <div class="status-grid">
+              <article class="stat-card">
+                <div class="icon-sq">📈</div>
+                <h3>Final performance model</h3>
+                <p class="value" id="stat-perf">—</p>
+                <p class="delta" id="badge-perf"></p>
+              </article>
+              <article class="stat-card">
+                <div class="icon-sq">📚</div>
+                <h3>LightGBM completion</h3>
+                <p class="value" id="stat-eng">—</p>
+                <p class="delta" id="badge-eng"></p>
+              </article>
+              <article class="stat-card">
+                <div class="icon-sq">◎</div>
+                <h3>GMM segmentation</h3>
+                <p class="value" id="stat-gmm">—</p>
+                <p class="delta" id="badge-gmm"></p>
+              </article>
+              <article class="stat-card">
+                <div class="icon-sq">💡</div>
+                <h3>Quick start</h3>
+                <p class="value" style="font-size: 0.85rem; font-weight: 500">
+                  <code style="font-size: 0.75rem">python scripts/bootstrap_demo.py</code>
+                </p>
+                <p class="delta" style="color: var(--muted)">Then <code>python serve.py</code></p>
+              </article>
+            </div>
+            <div class="panel">
+              <div class="panel-header">Load messages</div>
+              <div class="panel-body">
+                <pre id="dash-errors" class="result-box" style="margin: 0"></pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="perf" class="section-hidden">
+            <h2 class="page-title">Final performance score</h2>
+            <p class="page-sub">
+              From the “two winners” notebook: predicts <strong>Final_Performance_Score</strong> from the numeric
+              feature columns listed in <code>artifacts/best_model_meta.json</code>. Fill every field below — they
+              match your trained pipeline.
+            </p>
+            <div class="panel">
+              <div class="panel-header">Required inputs (one value per training feature)</div>
+              <div class="panel-body">
+                <p class="form-intro" id="perf-target-line"></p>
+                <div id="perf-fields" class="form-grid form-grid-wide"></div>
+                <button type="button" class="btn-primary" id="btn-perf">Predict</button>
+                <pre id="perf-result" class="result-box"></pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="eng" class="section-hidden">
+            <h2 class="page-title">Course completion (engagement)</h2>
+            <p class="page-sub">
+              Same inputs as the Kaggle “online course engagement” notebook: LightGBM + label-encoded
+              <strong>CourseCategory</strong>. All fields below are required.
+            </p>
+            <div class="panel">
+              <div class="panel-header">Learner profile</div>
+              <div class="panel-body">
+                <div id="eng-field-list" class="field-reference"></div>
+                <div class="form-grid">
+                  <label class="field"
+                    ><span>TimeSpentOnCourse</span
+                    ><small class="field-hint">Time on course (dataset units)</small
+                    ><input type="number" id="eng_time" value="72" min="0" step="any"
+                  /></label>
+                  <label class="field"
+                    ><span>NumberOfVideosWatched</span
+                    ><small class="field-hint">Count of videos watched</small
+                    ><input type="number" id="eng_vid" value="14" min="0" step="1"
+                  /></label>
+                  <label class="field"
+                    ><span>NumberOfQuizzesTaken</span
+                    ><small class="field-hint">Count of quizzes taken</small
+                    ><input type="number" id="eng_quiz" value="6" min="0" step="1"
+                  /></label>
+                  <label class="field"
+                    ><span>QuizScores</span
+                    ><small class="field-hint">0–100</small
+                    ><input type="number" id="eng_score" value="78" min="0" max="100" step="any"
+                  /></label>
+                  <label class="field"
+                    ><span>CompletionRate</span
+                    ><small class="field-hint">0–100 (%)</small
+                    ><input type="number" id="eng_comp" value="55" min="0" max="100" step="any"
+                  /></label>
+                  <label class="field"
+                    ><span>DeviceType</span
+                    ><small class="field-hint">0 or 1 (as in CSV)</small
+                    ><input type="number" id="eng_dev" value="0" min="0" max="1" step="1"
+                  /></label>
+                  <label class="field"
+                    ><span>CourseCategory</span>
+                    <small class="field-hint">Must be one of the five categories</small>
+                    <select id="eng_cat">
+                      <option>Programming</option>
+                      <option>Business</option>
+                      <option>Science</option>
+                      <option>Health</option>
+                      <option>Arts</option>
+                    </select>
+                  </label>
+                </div>
+                <button type="button" class="btn-primary" id="btn-eng">Predict completion</button>
+                <pre id="eng-result" class="result-box"></pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="reco" class="section-hidden">
+            <h2 class="page-title">Category recommendations</h2>
+            <p class="page-sub">
+              For each course category, the model outputs probability of completion; results are sorted descending
+              (same idea as <code>recommend_courses</code> in the notebook). Required fields match the engagement form
+              (except category — the model loops over all categories).
+            </p>
+            <div class="panel">
+              <div class="panel-body">
+                <div class="form-grid">
+                  <label class="field"
+                    ><span>TimeSpentOnCourse</span
+                    ><small class="field-hint">≥ 0</small
+                    ><input type="number" id="reco_time" value="50" min="0" step="any"
+                  /></label>
+                  <label class="field"
+                    ><span>NumberOfVideosWatched</span
+                    ><small class="field-hint">≥ 0</small
+                    ><input type="number" id="reco_vid" value="10" min="0" step="1"
+                  /></label>
+                  <label class="field"
+                    ><span>NumberOfQuizzesTaken</span
+                    ><small class="field-hint">≥ 0</small
+                    ><input type="number" id="reco_quiz" value="5" min="0" step="1"
+                  /></label>
+                  <label class="field"
+                    ><span>QuizScores</span
+                    ><small class="field-hint">0–100</small
+                    ><input type="number" id="reco_score" value="70" min="0" max="100" step="any"
+                  /></label>
+                  <label class="field"
+                    ><span>CompletionRate</span
+                    ><small class="field-hint">0–100</small
+                    ><input type="number" id="reco_comp" value="40" min="0" max="100" step="any"
+                  /></label>
+                  <label class="field"
+                    ><span>DeviceType</span
+                    ><small class="field-hint">0 or 1</small
+                    ><input type="number" id="reco_dev" value="0" min="0" max="1" step="1"
+                  /></label>
+                  <label class="field"
+                    ><span>top_k</span
+                    ><small class="field-hint">How many categories to return (1–5)</small
+                    ><input type="number" id="reco_k" value="3" min="1" max="5" step="1"
+                  /></label>
+                </div>
+                <button type="button" class="btn-primary" id="btn-reco">Get top K</button>
+                <pre id="reco-result" class="result-box"></pre>
+              </div>
+            </div>
+          </section>
+
+          <section id="gmm" class="section-hidden">
+            <h2 class="page-title">GMM segmentation (Optuna)</h2>
+            <p class="page-sub">
+              Gaussian mixture model on eight learner-skill signals. Fill all eight numeric fields — output is
+              cluster id and membership probabilities over mixture components.
+            </p>
+            <div class="panel">
+              <div class="panel-header">Required inputs (8 features)</div>
+              <div class="panel-body">
+                <div id="gmm-fields" class="form-grid form-grid-wide"></div>
+                <button type="button" class="btn-primary" id="btn-gmm">Assign cluster</button>
+                <pre id="gmm-result" class="result-box"></pre>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+    <script src="/assets/app.js"></script>
+  </body>
+</html>

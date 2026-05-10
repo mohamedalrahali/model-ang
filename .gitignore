@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.DS_Store
+Thumbs.db
+*.log
+.idea/
+.vscode/
+
+# Générés localement ou au build Docker (recréés avec scripts/bootstrap_demo.py)
+artifacts/

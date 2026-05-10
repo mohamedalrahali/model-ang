@@ -1,0 +1,10 @@
+# https://render.com — Web Service gratuit (sommeil après inactivité)
+# Si le Blueprint échoue, créez le Web Service à la main et pointez vers ce Dockerfile.
+version: "1"
+services:
+  - type: web
+    name: jungle-ml-web
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
