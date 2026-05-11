@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.field_descriptions import (
     ENGAGEMENT_INPUT_DETAILS,
@@ -30,6 +30,68 @@ ROOT = Path(__file__).resolve().parents[1]
 STATIC = ROOT / "static"
 
 state: ModelState = ModelState()
+
+
+class PerformanceHealthBlock(BaseModel):
+    """Status of the final-score regression pipeline."""
+
+    loaded: bool = Field(description="True if artifacts/best_model.joblib is loaded.")
+    error: str | None = Field(None, description="Error message when the model is missing or invalid.")
+    target: str | None = Field(None, description="Target column name from best_model_meta.json.")
+    model_label: str | None = Field(None, description="Human-readable model label from metadata.")
+
+
+class SimpleLoadedBlock(BaseModel):
+    """Generic loaded / error pair for engagement and GMM."""
+
+    loaded: bool
+    error: str | None = None
+
+
+class HealthResponse(BaseModel):
+    """Payload returned by GET /api/health and POST /api/admin/reload-models."""
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "examples": [
+                {
+                    "performance": {
+                        "loaded": True,
+                        "error": None,
+                        "target": "Final_Performance_Score",
+                        "model_label": "Ridge pipeline",
+                    },
+                    "engagement": {"loaded": True, "error": None},
+                    "gmm": {"loaded": True, "error": None},
+                    "schema_endpoints": {
+                        "engagement": "/api/schema/engagement",
+                        "gmm": "/api/schema/gmm",
+                        "performance": "/api/schema/performance",
+                    },
+                    "api_build": "schema-routes-v2",
+                }
+            ]
+        }
+    )
+
+    performance: PerformanceHealthBlock
+    engagement: SimpleLoadedBlock
+    gmm: SimpleLoadedBlock
+    schema_endpoints: dict[str, str] = Field(
+        description="Relative paths to JSON schemas for each model.",
+    )
+    api_build: str = Field(description="Build tag for debugging deployments.")
+
+
+def _health_api_body() -> dict:
+    body = health_payload(state)
+    body["schema_endpoints"] = {
+        "engagement": "/api/schema/engagement",
+        "gmm": "/api/schema/gmm",
+        "performance": "/api/schema/performance",
+    }
+    body["api_build"] = "schema-routes-v2"
+    return body
 
 
 @asynccontextmanager
@@ -60,24 +122,17 @@ async def index():
     return FileResponse(index_path)
 
 
-@app.get("/api/health")
+@app.get("/api/health", response_model=HealthResponse)
 async def api_health():
-    body = health_payload(state)
-    body["schema_endpoints"] = {
-        "engagement": "/api/schema/engagement",
-        "gmm": "/api/schema/gmm",
-        "performance": "/api/schema/performance",
-    }
-    body["api_build"] = "schema-routes-v2"
-    return body
+    return HealthResponse.model_validate(_health_api_body())
 
 
-@app.post("/api/admin/reload-models")
+@app.post("/api/admin/reload-models", response_model=HealthResponse)
 async def api_reload_models():
     """Reload joblib/pkl artifacts from disk (after copy or retraining)."""
     global state
     state = load_models()
-    return health_payload(state)
+    return HealthResponse.model_validate(_health_api_body())
 
 
 class PerformanceIn(BaseModel):
